@@ -1,0 +1,2 @@
+language = "deno"
+run = "deno run --allow-all -lock=lockfile.json main.ts"

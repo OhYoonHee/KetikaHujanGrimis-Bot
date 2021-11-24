@@ -1,0 +1,23 @@
+{
+    "name": "KetikaHujanGrimis Bot",
+    "keywords": [
+        "bot",
+        "telegram",
+        "deno",
+        "grammy"
+    ],
+    "repository": "https://github.com/OhYoonHee/KetikaHujanGrimis-Bot",
+    "env": {
+        "BOT_TOKEN": {
+            "description": "Telegram bot token, get it from https://t.me/botfather",
+            "required": true
+        }
+    },
+    "stack": "container",
+    "formation": {
+        "worker": {
+            "quantity": 0,
+            "size": "free"
+        }
+    }
+}
