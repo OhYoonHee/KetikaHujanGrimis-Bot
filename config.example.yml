@@ -1,0 +1,11 @@
+# rename this file to config.yml
+command:
+    prefixes: ["!", "/"]
+
+owner:
+    name: "your name"
+    username: "your_username"
+    id: 123 # your id
+
+dev:
+    ids: [123] # dev ids

@@ -1,7 +1,12 @@
 // Import package or type
-import { Context } from "https://deno.land/x/grammy@v1.4.2/mod.ts";
-import { CommandContext, MaybeArray, StringWithSuggestions } from "./types.ts";
-import { render } from 'https://deno.land/x/mustache/mod.ts';
+import { 
+    MaybeArray,
+    CommandInfo,
+    GroupCommandInfo,
+    createCommandTyping,
+    createGroupCommandTyping
+} from "../types";
+import { config } from "../config";
 
 // Export function or class
 export function toArray<C>(input: MaybeArray<C>): C[] {
@@ -50,11 +55,10 @@ export class CommandUtil {
      */
     static is_right_command(
         text: string,
-        prefix: string | string[],
         command: string | string[],
-        username?: string,
+        username?: string
     ): string | undefined {
-        let prefixs = toArray(prefix);
+        let prefixs = toArray(config.command.prefixes);
         let commands = toArray(command);
         let test = /([^@\s]+)@?(?:(\S+)|)\s?([\s\S]+)?$/i.exec(text);
         for (let x of commands) {
@@ -93,12 +97,6 @@ export class CommandUtil {
             }
         }
         return "";
-    }
-}
-
-export class MessageUtil {
-    static renderMessage(text: string, model?: Record<string, string | any>): string {
-        return render(text, model);
     }
 }
 
@@ -188,7 +186,7 @@ export class DevUtil {
      * @returns {string} The type of the input
      */
     static parse_type(input: any) {
-        if (input instanceof Deno.Buffer) {
+        if (input instanceof Buffer) {
             let length = Math.round(input.length / 1024 / 1024);
             let ic = "MB";
             if (!length) {
@@ -229,29 +227,39 @@ export class DevUtil {
         return s.replace(/<[^>]*>/g, "");
     }
 
+    /**
+     * Check the input string is a number or not
+     * @param {string} input 
+     * @returns {boolean} Boolean result
+     */
     static isNumber(input: string): boolean {
         return /^\d+$/.test(input.toString());
     }
-}
 
-export class filter {
-    static command<C extends Context, S extends string>(
-        command: MaybeArray<
-            StringWithSuggestions<S | "start" | "help">
-        >,
-    ) {
-        return (ctx: CommandContext<C>): ctx is CommandContext<C> => {
-            let right = CommandUtil.is_right_command(
-                ctx.msg.text,
-                ["!", ".", "-", "/"],
-                command,
-                ctx.me.username,
-            );
-            if (right) {
-                ctx.match = CommandUtil.parse_arguments(ctx.msg.text);
-                ctx.cmd_name = right;
-            }
-            return right ? true : false;
-        };
+    static isUrl(url: string): string | null {
+        let str_regex = '^(?:http|ftp)s?://'; // http:// or https://
+        str_regex += '(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'; // domain...
+        str_regex += 'localhost|'; // localhost...
+        str_regex += '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'; // ...or ip
+        str_regex += '(?::\d+)?'; // optional port
+        str_regex += '(?:/?|[/?]\S+)$';
+        let regex = new RegExp(str_regex, 'gi');
+        let match = url.match(regex);
+        if (match) {
+            return match[0];
+        }
+        return null;
     }
 }
+
+class _PluginUtil {
+    createCommand(info: CommandInfo): createCommandTyping {
+        return { info, __name: "command" };
+    }
+
+    createGroupCommand(info: GroupCommandInfo): createGroupCommandTyping {
+        return { info, __name: "groupCommand" };
+    }
+};
+
+export const PluginUtil = new _PluginUtil();
